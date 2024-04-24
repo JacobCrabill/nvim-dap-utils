@@ -270,11 +270,4 @@ end
 -- This allows us to reset the dap config tables to these defaults later
 default_configs = M.copy_dap_config(dap)
 
--- Expose relevant functions as user commands
-vim.api.nvim_create_user_command('DebugCMake', M.cmake_binary_picker, {})
-vim.api.nvim_create_user_command('DebugZig', M.zig_picker, {})
-vim.api.nvim_create_user_command("LoadDAPConfig", M.load_local_config, {})
-vim.api.nvim_create_user_command("ShowDAPConfigs", M.show_dap_configs, {})
-vim.api.nvim_create_user_command("ShowDAPAdapters", M.show_dap_adapters, {})
-
 return M
