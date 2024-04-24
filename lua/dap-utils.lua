@@ -37,8 +37,6 @@ function M.setup(opts)
       name = 'lldb',
     }
   end
-  -- M.opts.gdb_path = 'gdb' -- Default to the first 'gdb' found in $PATH
-  -- M.opts.lldb_path = 'lldb-vscode' -- Default to the first 'lldb-vscode' found in $PATH
 
   -- If a preferred adapter is not specified, use LLDB
   if M.opts.default_adapter == nil then
@@ -237,25 +235,35 @@ function M.cmake_binary_picker()
   })
 end
 
--- Create a generic DAP config using the given adapter
+-- Create a Zig binary config
+-- Start a DAP session using the output from the Telescope prompt buffer using the default_adapter
+function M.start_zig_dap(prompt_bufnr)
+  local cmd = tel_actions_state.get_selected_entry()[1]
+  tel_actions.close(prompt_bufnr)
+  dap.run(M.create_config("Zig exe", M.opts.default_adapter, cmd))
+end
+
+-- Launch a Telescope picker for binary files at <cwd>/zig-out/bin/
+function M.zig_picker()
+  require("telescope.builtin").find_files({
+    find_command = {'find', vim.fn.getcwd() .. '/zig-out/bin/', '-type', 'f', '-executable'},
+    attach_mappings = function(_, map)
+      map("n", "<cr>", M.start_zig_dap)
+      map("i", "<cr>", M.start_zig_dap)
+      return true
+    end,
+  })
+end
+
+-- Create a generic DAP config using the given name, adapter, and prompt path.
 -- Defaults to the default_adapter provided in 'setup()'
 -- Prompts for both the binary file and the command-line arguments
 -- The optional default_path specifies the prompt path relative to the current working directory
 function M.default_dap_config(name, adapter, default_path)
   adapter = adapter or M.opts.default_adapter
   default_path = default_path or ''
-  default_path = vim.fn.getcwd() .. default_path
-  return {
-    name = name,
-    type = adapter,
-    request = 'launch',
-    cwd = '${workspaceFolder}',
-    stopOnEntry = false,
-    -- Take the executable and args via input prompt
-    -- The prompt defaults to the the input default_path relative to the cwd
-    program = M.prompt_for_binary(default_path),
-    args = M.prompt_for_args,
-  }
+  default_path = vim.fn.getcwd() .. '/' .. default_path
+  return M.create_config(name, adapter, M.prompt_for_binary(default_path), M.prompt_for_args)
 end
 
 -- Create a deep copy of the configurations defined above
@@ -264,6 +272,7 @@ default_configs = M.copy_dap_config(dap)
 
 -- Expose relevant functions as user commands
 vim.api.nvim_create_user_command('DebugCMake', M.cmake_binary_picker, {})
+vim.api.nvim_create_user_command('DebugZig', M.zig_picker, {})
 vim.api.nvim_create_user_command("LoadDAPConfig", M.load_local_config, {})
 vim.api.nvim_create_user_command("ShowDAPConfigs", M.show_dap_configs, {})
 vim.api.nvim_create_user_command("ShowDAPAdapters", M.show_dap_adapters, {})
