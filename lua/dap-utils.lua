@@ -138,6 +138,9 @@ function M.load_local_config()
   if dap_config.configurations ~= nil then
     -- Append the local configurations into the table
     for lang, configs in pairs(dap_config.configurations) do
+      if dap.configurations[lang] == nil then
+        dap.configurations[lang] = {}
+      end
       for _, c in ipairs(configs) do
         table.insert(dap.configurations[lang], c)
       end
@@ -193,6 +196,19 @@ function M.prompt_for_binary(default_path)
       default = vim.fn.getcwd() .. default_path,
       copmletion ='file',
     })
+  end
+end
+
+-- Create a .gdbinit file setting all environment variables in the 'env' table
+function M.create_gdbinit(env, cwd)
+  local gdbinit = cwd or vim.fn.getcwd()
+  gdbinit = gdbinit .. "/.gdbinit"
+  local f = io.open(gdbinit, 'w')
+  if f ~= nil then
+    for key, value in pairs(env) do
+      f:write('set env ' .. key .. '="' .. value .. '"\n')
+    end
+    f:close()
   end
 end
 
