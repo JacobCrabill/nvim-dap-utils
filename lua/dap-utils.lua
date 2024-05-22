@@ -132,7 +132,11 @@ function M.load_local_config()
   -- Reset our DAP config table to the defaults
   local defaults = M.copy_dap_config(default_configs)
   dap.configurations = defaults.configurations
-  dap.adapters = defaults.adapters
+
+  -- Append any new adapters to the table, keeping pre-existing adapters
+  for name, adapter in pairs(defaults.adapters) do
+    dap.adapters[name] = adapter
+  end
 
   -- Load debug configurations
   if dap_config.configurations ~= nil then
