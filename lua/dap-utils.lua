@@ -104,7 +104,6 @@ return dap
   f:write(dap_config)
   f:close()
 end
-vim.api.nvim_create_user_command("CreateLocalDAPConfig", M.create_starter_local_config, {})
 
 -----------------------------------------------------------------------------------------
 -- Try loading a local "dap-config.lua" file from the current working directory
